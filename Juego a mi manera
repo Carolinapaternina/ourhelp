@@ -1,0 +1,97 @@
+import pygame
+import sys
+import random
+from pygame.locals import *
+
+# Declaración de constantes y variables
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 640
+OBSTACLE_WIDTH = 30  # Ancho de los obstáculos
+
+# Función principal del juego
+def main():
+    # Se inicializa el juego
+    pygame.init()
+    pygame.display.set_caption("Mi juego")
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    fondo = pygame.image.load('fondo_juego.png')
+    personaje = pygame.image.load('personaje_princesa.png')
+    personaje_x = (SCREEN_WIDTH - personaje.get_width()) // 2
+    personaje_y = SCREEN_HEIGHT - personaje.get_height() - 20
+
+    # Lista de obstáculos (cuadros azules)
+    obstaculos = []
+
+    # Reloj para controlar la velocidad de actualización
+    clock = pygame.time.Clock()
+
+    # Contador de obstáculos esquivados
+    obstaculos_esquivados = 0
+
+    # Bandera para controlar el estado del juego
+    game_over = False
+
+    # Imagen de "Game Over"
+    game_over_image = pygame.image.load('game_over.png')  # Reemplaza 'game_over.png' con la ruta de tu imagen
+
+    # Bucle principal
+    while True:
+        # 1.- Se dibuja la pantalla
+        screen.fill(WHITE)
+        screen.blit(fondo, (0, 0))
+
+        if not game_over:
+            screen.blit(personaje, (personaje_x, personaje_y))
+
+        # 2.- Se comprueban los eventos
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit(0)
+
+        if not game_over:
+            # 3.- Generar obstáculos aleatorios (cuadros azules)
+            if random.randint(0, 20) == 0:  # Controla la frecuencia de generación de obstáculos
+                obstacle_x = random.randint(0, SCREEN_WIDTH - OBSTACLE_WIDTH)
+                obstacle_y = -20  # Comienza desde arriba de la pantalla
+                obstaculos.append((obstacle_x, obstacle_y))
+
+            # 4.- Mover y dibujar obstáculos (cuadros azules)
+            for i, (obstacle_x, obstacle_y) in enumerate(obstaculos):
+                pygame.draw.rect(screen, BLUE, (obstacle_x, obstacle_y, OBSTACLE_WIDTH, 20))
+                obstacle_y += 2  # Velocidad de movimiento de los obstáculos
+
+                # Verificar colisión con el personaje del medio
+                if (personaje_x < obstacle_x < personaje_x + personaje.get_width() and
+                        personaje_y < obstacle_y < personaje_y + personaje.get_height()):
+                    game_over = True
+
+                # Si el obstáculo pasó el límite inferior sin colisionar, eliminarlo
+                if obstacle_y > SCREEN_HEIGHT:
+                    obstaculos.pop(i)
+                    obstaculos_esquivados += 1
+
+            # 5.- Mover el personaje del medio de izquierda a derecha
+            keys = pygame.key.get_pressed()
+            if keys[K_LEFT]:
+                personaje_x -= 2
+                personaje_x = max(personaje_x, 0)
+            if keys[K_RIGHT]:
+                personaje_x += 2
+                personaje_x = min(personaje_x, SCREEN_WIDTH - personaje.get_width())
+
+        if game_over:
+            # Mostrar "Game Over" en el centro de la pantalla
+            screen.blit(game_over_image, ((SCREEN_WIDTH - game_over_image.get_width()) // 2, (SCREEN_HEIGHT - game_over_image.get_height()) // 2))
+
+        # 6.- Se actualiza la pantalla
+        pygame.display.update()
+
+        # 7.- Controlar la velocidad de actualización
+        clock.tick(60)
+
+# Este fichero es el que ejecuta el juego principal
+if __name__ == '__main__':
+    main()
